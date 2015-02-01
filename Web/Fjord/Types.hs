@@ -23,12 +23,17 @@ data History = History { _forward :: [Text]
                        , _backward :: [Text] } deriving Show
 makeLenses ''History
 
+data Statusbar = Statusbar { _gtkbar :: Gtk.Statusbar
+                           , _contextId :: Int }
+makeLenses ''Statusbar
+
 data Pane = Pane { _uuid       :: UUID
                  , _history    :: History
                  , _currentUri :: Text
                  , _window     :: Gtk.Window
                  , _windowPane :: Gtk.ScrolledWindow 
-                 , _webView    :: WebView } deriving (Typeable)
+                 , _webView    :: WebView
+                 , _statusbar  :: Statusbar } deriving (Typeable)
 makeLensesWith (lensRules & generateSignatures .~ False) ''Pane
 uuid :: Getter Pane UUID
 
