@@ -22,6 +22,7 @@ import qualified Data.Map as Map
 import Data.List
 import Data.Char
 import qualified Data.Set as Set
+import qualified Data.Text
 
 
 createKeyBind :: [Modifier] -> Maybe Char -> Web () -> KeyBind
@@ -76,3 +77,6 @@ navigate d = do
 navigateBack, navigateForward :: Web ()
 navigateBack = navigate Prev
 navigateForward = navigate Next
+
+openUri :: Data.Text.Text -> Web ()
+openUri = loadUri
