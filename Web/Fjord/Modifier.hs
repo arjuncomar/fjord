@@ -3,6 +3,7 @@ module Web.Fjord.Modifier where
 import qualified Graphics.UI.Gtk as Gtk
 import Web.Fjord.Types
 import Control.Lens
+import qualified Data.Set as Set
 
 shift, lock, control, alt, super, hyper, meta :: Modifier
 shift = Modifier Gtk.Shift
@@ -20,5 +21,5 @@ button3 = Modifier Gtk.Button3
 button4 = Modifier Gtk.Button4
 button5 = Modifier Gtk.Button5
 
-convert :: [Gtk.Modifier] -> [Modifier]
-convert = map (view _Unwrapped)
+convert :: [Gtk.Modifier] -> Set.Set Modifier
+convert = Set.fromList . map (view _Unwrapped)

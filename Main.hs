@@ -19,8 +19,8 @@ fjord = liftIO Gtk.initGUI >> createPane >> do
   liftIO $ initWeb () pane ()
   let keyBindings = Map.fromList [ createKeyBind []      (Just 'k') scrollUp
                                  , createKeyBind []      (Just 'j') scrollDown 
-                                 , createKeyBind [shift] (Just 'H') navigateBack
-                                 , createKeyBind [shift] (Just 'L') navigateForward ]
+                                 , createKeyBind [shift] (Just 'h') navigateBack
+                                 , createKeyBind [shift] (Just 'l') navigateForward ]
 
   addKeyBindings keyBindings
       

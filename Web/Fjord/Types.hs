@@ -14,6 +14,7 @@ import Graphics.UI.Gtk.WebKit.WebView
 import System.Glib.Flags
 import Data.Text
 import Data.Typeable
+import qualified Data.Set as Set
 
 data Direction2D = U | D | L | R deriving (Enum, Eq, Ord, Read, Show, Bounded)
 data Direction1D = Prev | Next deriving (Enum, Eq, Ord, Read, Show, Bounded)
@@ -45,12 +46,12 @@ instance Show Pane where
 type Config = ()
 type Log = ()
 type Web = RWST Config Log Pane IO
-type KeyBind = (([Modifier], Maybe Char), Web ())
+type KeyBind = ((Set.Set Modifier, Maybe Char), Web ())
 
 key :: Lens' KeyBind (Maybe Char)
 key = _1._2
 
-mods :: Lens' KeyBind [Modifier]
+mods :: Lens' KeyBind (Set.Set Modifier)
 mods = _1._1
 
 action :: Lens' KeyBind (Web ())

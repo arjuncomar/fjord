@@ -19,18 +19,22 @@ import Control.Applicative
 import Data.Maybe
 import qualified Data.Map as Map
 import Data.List
+import Data.Char
+import qualified Data.Set as Set
 
 
 createKeyBind :: [Modifier] -> Maybe Char -> Web () -> KeyBind
-createKeyBind mods key action = ((mods, key), action)
+createKeyBind mods key action = ((Set.fromList mods, key), action)
 
-addKeyBindings :: Map.Map ([Modifier], Maybe Char) (Web ()) -> Web ()
+addKeyBindings :: Map.Map (Set.Set Modifier, Maybe Char) (Web ()) -> Web ()
 addKeyBindings kbm = void $ do
   swView <- use windowPane
   liftIO . Gtk.on swView keyPressEvent . tryEvent $ do
     kv <- eventKeyVal
     mods <- eventModifier
-    liftIO . maybe (return ()) runWeb $ kbm ^. at (convert mods, keyToChar kv)
+    runAction $ kbm^.at (createKey mods kv)
+      where runAction = liftIO . maybe (return ()) runWeb
+            createKey mods kv = (convert mods, toLower <$> keyToChar kv)
 
 adjust :: Attr ScrolledWindow Adjustment -> BinOp Double -> Web ()
 adjust axis f = do
