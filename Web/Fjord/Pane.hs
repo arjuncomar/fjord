@@ -10,6 +10,7 @@ import Graphics.UI.Gtk.WebKit.WebFrame
 import Web.Fjord.Types
 import Web.Fjord.History
 import Web.Fjord.Web
+import Web.Fjord.Utils
 
 import Control.Lens 
 import Control.Monad.IO.Class (liftIO)
@@ -42,7 +43,7 @@ mkPane = do
   window  `Gtk.on` Gtk.deleteEvent $ liftIO Gtk.mainQuit >> return False 
   wv `Gtk.on` loadCommitted $ \wf -> do
     muri <- webFrameGetUri wf
-    maybe (return ()) triggeredLoadUri muri
+    maybe emptyM triggeredLoadUri muri
 
   Gtk.widgetShowAll window
   cid <- Gtk.statusbarGetContextId sb ("url" :: Text)

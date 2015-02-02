@@ -5,6 +5,7 @@ import Web.Fjord.Pane
 import Web.Fjord.History
 import Web.Fjord.Web
 import Web.Fjord.Modifier
+import Web.Fjord.Utils
 
 import Graphics.UI.Gtk hiding (on, get, Modifier(..))
 import qualified Graphics.UI.Gtk as Gtk (on, get, Modifier(..))
@@ -33,7 +34,7 @@ addKeyBindings kbm = void $ do
     kv <- eventKeyVal
     mods <- eventModifier
     runAction $ kbm^.at (createKey mods kv)
-      where runAction = liftIO . maybe (return ()) runWeb
+      where runAction = liftIO . whenJust runWeb
             createKey mods kv = (convert mods, toLower <$> keyToChar kv)
 
 adjust :: Attr ScrolledWindow Adjustment -> BinOp Double -> Web ()
@@ -66,7 +67,7 @@ navigate d = do
       push currentUri $ history.dirLens' d
       currentUri .= uri
       loadUri uri
-    otherwise -> return ()
+    otherwise -> emptyM
   where dirLens Prev = backward
         dirLens Next = forward
         dirLens' Prev = forward
