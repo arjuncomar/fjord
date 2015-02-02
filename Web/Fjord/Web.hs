@@ -32,3 +32,6 @@ runWeb wa = void $ do
   
   writeIORef globalPane pane'
   writeIORef globalLog (log <> log')
+
+updateWeb :: Web ()
+updateWeb = get >>= (liftIO . writeIORef globalPane)

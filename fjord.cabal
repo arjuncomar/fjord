@@ -23,6 +23,7 @@ executable fjord
                      , Web.Fjord.History
                      , Web.Fjord.Web
                      , Web.Fjord.Modifier
+                     , Web.Fjord.Utils
   -- other-extensions:    
   build-depends:       base >=4.7 && <4.8
                      , gtk3
