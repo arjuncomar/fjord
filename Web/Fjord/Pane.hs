@@ -2,7 +2,7 @@ module Web.Fjord.Pane where
 
 import Data.UUID
 import Data.UUID.V4
-import Graphics.UI.Gtk as Gtk hiding (set, on)
+import Graphics.UI.Gtk hiding (set, on)
 import qualified Graphics.UI.Gtk as Gtk
 import Graphics.UI.Gtk.WebKit.WebView
 import Graphics.UI.Gtk.WebKit.WebFrame
@@ -63,11 +63,6 @@ mkPane = do
                  , Gtk.widgetMarginLeft   := 0
                  , Gtk.widgetMarginRight  := 0 
                  , Gtk.containerBorderWidth := 0 ]
-  Gtk.widgetModifyBg sbb Gtk.StateNormal (Gtk.Color 65535 65535 65535)
-  Gtk.containerForeach sbb $ \lbl -> do
-    Gtk.boxReorderChild sbb lbl (-1)
-    Gtk.widgetModifyFg lbl Gtk.StateNormal (Gtk.Color 30000 30000 30000)
-    Gtk.widgetModifyBg lbl Gtk.StateNormal (Gtk.Color 65535 65535 65535)
 
   window  `Gtk.on` Gtk.deleteEvent $ liftIO Gtk.mainQuit >> return False 
   wv `Gtk.on` navigationPolicyDecisionRequested $ \wf nr wbna wpd -> do
@@ -86,12 +81,12 @@ mkPane = do
               , _window = window
               , _windowPane = swView
               , _webView = wv
-              , _statusbar = Statusbar sb (fromIntegral cid) }
+              , _statusbar = Statusbar sb (fromIntegral cid)
+              , _sboverlay = ovl
+              , _commandEntry = Nothing }
 
 createPane :: Web ()
-createPane = do
-  pane <- liftIO mkPane
-  put pane
+createPane = liftIO mkPane >>= put
 
 -- The web frame has triggered a new URI to be loaded
 -- update the history and currentURI but don't trigger another load.
@@ -102,8 +97,13 @@ updatePane :: Text -> Web ()
 updatePane uri = do
   curr <- use currentUri
   unless (curr == uri) $ do
+
+    -- update history if the old uri is not blank
+    -- This should only happen when the pane is first created.
     unless (curr == "") $ push currentUri $ history.backward
     currentUri .= uri
+
+    -- Update the status bar text to reflect the current uri.
     join $ replaceMessage <$> use (statusbar.gtkbar) 
                           <*> use (statusbar.contextId)
                           <*> use currentUri
@@ -125,3 +125,31 @@ pushMessage sb cid msg = void . liftIO $ Gtk.statusbarPush sb (fromIntegral cid)
 
 replaceMessage :: Gtk.Statusbar -> Int -> Text -> Web ()
 replaceMessage sb cid msg = clearStatusbar sb cid >> pushMessage sb cid msg
+
+
+mkEntry :: IO Gtk.Entry
+mkEntry = do
+  entryBuffer <- entryBufferNew (Nothing :: Maybe Text)
+  entry <- entryNewWithBuffer entryBuffer
+  void $ entry `Gtk.on` entryActivated $ liftIO $ do
+    uri <- entryGetText entry
+    runWeb $ do
+      loadUri ("https://" <> uri) 
+      commandEntry .= Nothing
+      swView <- use windowPane
+      liftIO $ widgetGrabFocus swView
+    widgetDestroy entry
+  Gtk.set entry [ widgetMarginTop    := 0
+                         , widgetMarginBottom := 0 
+                         , widgetMarginLeft   := 0
+                         , widgetMarginRight  := 0 ]
+  return entry
+
+addCommandEntry :: Web ()
+addCommandEntry = do
+  ovl <- use sboverlay
+  entry <- liftIO mkEntry
+  liftIO $ overlayAdd ovl entry
+  liftIO $ widgetShowNow entry
+  liftIO $ widgetGrabFocus entry
+  commandEntry .= Just entry

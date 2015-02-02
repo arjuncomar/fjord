@@ -80,3 +80,6 @@ navigateForward = navigate Next
 
 openUri :: Data.Text.Text -> Web ()
 openUri = loadUri
+
+openCommandEntry :: Web ()
+openCommandEntry = addCommandEntry

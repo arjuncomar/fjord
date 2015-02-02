@@ -34,7 +34,9 @@ data Pane = Pane { _uuid       :: UUID
                  , _window     :: Gtk.Window
                  , _windowPane :: Gtk.ScrolledWindow 
                  , _webView    :: WebView
-                 , _statusbar  :: Statusbar } deriving (Typeable)
+                 , _statusbar  :: Statusbar 
+                 , _sboverlay  :: Gtk.Overlay 
+                 , _commandEntry :: Maybe Gtk.Entry } deriving (Typeable)
 makeLensesWith (lensRules & generateSignatures .~ False) ''Pane
 uuid :: Getter Pane UUID
 
