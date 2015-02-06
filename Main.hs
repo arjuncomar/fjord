@@ -24,7 +24,7 @@ fjord = liftIO Gtk.initGUI >> createPane >> do
                                  , createKeyBind [shift] (Just ':') openCommandEntry ]
 
   addKeyBindings keyBindings
-      
+
   loadUri "https://www.reddit.com"
 
   liftIO Gtk.mainGUI
