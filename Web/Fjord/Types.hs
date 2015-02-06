@@ -12,25 +12,21 @@ import Data.UUID
 import qualified Graphics.UI.Gtk as Gtk
 import Graphics.UI.Gtk.WebKit.WebView
 import System.Glib.Flags
-import Data.Text
+import Data.Text hiding (replace)
 import Data.Typeable
 import qualified Data.Set as Set
+import Data.List.Zipper
 
 data Direction2D = U | D | L | R deriving (Enum, Eq, Ord, Read, Show, Bounded)
 data Direction1D = Prev | Next deriving (Enum, Eq, Ord, Read, Show, Bounded)
 type BinOp a = a -> a -> a 
-
-data History = History { _forward :: [Text]
-                       , _backward :: [Text] } deriving Show
-makeLenses ''History
 
 data Statusbar = Statusbar { _gtkbar :: Gtk.Statusbar
                            , _contextId :: Int }
 makeLenses ''Statusbar
 
 data Pane = Pane { _uuid       :: UUID
-                 , _history    :: History
-                 , _currentUri :: Text
+                 , _history    :: Zipper Text
                  , _window     :: Gtk.Window
                  , _windowPane :: Gtk.ScrolledWindow 
                  , _webView    :: WebView
@@ -40,10 +36,12 @@ data Pane = Pane { _uuid       :: UUID
 makeLensesWith (lensRules & generateSignatures .~ False) ''Pane
 uuid :: Getter Pane UUID
 
-instance Show Pane where
-  show p = "Pane { _uuid = " <> (show $ _uuid p) <> "\n"
-        <> ", _history = " <> (show $ _history p) <> "\n"
-        <> ", _currentUri = " <> (show $ _currentUri p) <> " }"
+currentUri :: Lens' Pane Text
+currentUri = history . lens cursor setCursor
+
+setCursor :: Zipper Text -> Text -> Zipper Text
+setCursor z u | emptyp z = replace u z 
+              | otherwise = insert u z
 
 type Config = ()
 type Log = ()

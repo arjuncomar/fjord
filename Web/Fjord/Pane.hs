@@ -75,14 +75,13 @@ mkPane = do
 
   Gtk.widgetShowAll window
 
-  return Pane { _uuid = uid
-              , _history = History [] []
-              , _currentUri = ""
-              , _window = window
-              , _windowPane = swView
-              , _webView = wv
-              , _statusbar = Statusbar sb (fromIntegral cid)
-              , _sboverlay = ovl
+  return Pane { _uuid         = uid
+              , _history      = fromList [""]
+              , _window       = w
+              , _windowPane   = swView
+              , _webView      = wv
+              , _statusbar    = Statusbar sb (fromIntegral cid)
+              , _sboverlay    = ovl
               , _commandEntry = Nothing }
 
 createPane :: Web ()
@@ -100,7 +99,7 @@ updatePane uri = do
 
     -- update history if the old uri is not blank
     -- This should only happen when the pane is first created.
-    unless (curr == "") $ push currentUri $ history.backward
+    unless (curr == "") $ history %= push uri
     currentUri .= uri
 
     -- Update the status bar text to reflect the current uri.
@@ -134,7 +133,7 @@ mkEntry = do
   void $ entry `Gtk.on` entryActivated $ liftIO $ do
     uri <- entryGetText entry
     runWeb $ do
-      loadUri ("https://" <> uri) 
+      loadUri ("https://" <> uri)
       commandEntry .= Nothing
       swView <- use windowPane
       liftIO $ widgetGrabFocus swView

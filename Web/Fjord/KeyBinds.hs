@@ -2,41 +2,39 @@ module Web.Fjord.KeyBinds where
 
 import Web.Fjord.Types
 import Web.Fjord.Pane
-import Web.Fjord.History
 import Web.Fjord.Web
 import Web.Fjord.Modifier
 import Web.Fjord.Utils
 
-import Graphics.UI.Gtk hiding (on, get, Modifier(..))
-import qualified Graphics.UI.Gtk as Gtk (on, get, Modifier(..))
-import Graphics.UI.Gtk.WebKit.WebView 
+import Graphics.UI.Gtk (keyPressEvent, tryEvent, eventKeyVal, eventModifier,
+                        keyToChar, Attr, ScrolledWindow, Adjustment,
+                        adjustmentGetValue, adjustmentGetStepIncrement,
+                        adjustmentSetValue, adjustmentValueChanged,
+                        scrolledWindowVAdjustment, scrolledWindowHAdjustment)
+import qualified Graphics.UI.Gtk as Gtk (on, get)
 
-import Control.Lens ((^.), at, view, (&), use, (.=), _Unwrapped)
-import Control.Monad (void)
-import Control.Monad.IO.Class (liftIO)
-import Control.Monad.State
-import Control.Applicative
-
-import Data.Maybe
+import Control.Lens ((^.), at, use, (%=))
+import qualified Data.Set as Set (fromList, Set)
 import qualified Data.Map as Map
-import Data.List
-import Data.Char
-import qualified Data.Set as Set
-import qualified Data.Text
-
+import Control.Monad(void, join)
+import Control.Monad.IO.Class(liftIO)
+import Data.Char(toLower)
+import Control.Applicative((<$>))
+import Data.List.Zipper (right, left)
+import qualified Data.Text as T
 
 createKeyBind :: [Modifier] -> Maybe Char -> Web () -> KeyBind
-createKeyBind mods key action = ((Set.fromList mods, key), action)
+createKeyBind ms k act = ((Set.fromList ms, k), act)
 
 addKeyBindings :: Map.Map (Set.Set Modifier, Maybe Char) (Web ()) -> Web ()
 addKeyBindings kbm = void $ do
   swView <- use windowPane
   liftIO . Gtk.on swView keyPressEvent . tryEvent $ do
     kv <- eventKeyVal
-    mods <- eventModifier
-    runAction $ kbm^.at (createKey mods kv)
+    ms <- eventModifier
+    runAction $ kbm^.at (createKey ms kv)
       where runAction = liftIO . whenJust runWeb
-            createKey mods kv = (convert mods, toLower <$> keyToChar kv)
+            createKey ms kv = (convert ms, toLower <$> keyToChar kv)
 
 adjust :: Attr ScrolledWindow Adjustment -> BinOp Double -> Web ()
 adjust axis f = do
@@ -62,17 +60,10 @@ scrollRight = scroll R
 
 navigate :: Direction1D -> Web ()
 navigate d = do
-  prevUri <- pop (history.dirLens d)
-  case prevUri of
-    [uri] -> do
-      push currentUri $ history.dirLens' d
-      currentUri .= uri
-      loadUri uri
-    otherwise -> emptyM
-  where dirLens Prev = backward
-        dirLens Next = forward
-        dirLens' Prev = forward
-        dirLens' Next = backward
+  history %= dir d
+  join $ loadUri <$> use currentUri
+  where dir Prev = right
+        dir Next = left
 
 navigateBack, navigateForward :: Web ()
 navigateBack = navigate Prev
