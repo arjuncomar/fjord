@@ -69,7 +69,7 @@ navigateBack, navigateForward :: Web ()
 navigateBack = navigate Prev
 navigateForward = navigate Next
 
-openUri :: Data.Text.Text -> Web ()
+openUri :: T.Text -> Web ()
 openUri = loadUri
 
 openCommandEntry :: Web ()

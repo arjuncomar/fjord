@@ -5,7 +5,6 @@ import Web.Fjord.Types
 import Data.Monoid
 import Data.IORef
 import Control.Monad.RWS
-import Control.Applicative
 
 globalPane :: IORef Pane
 globalPane = declareIORef "pane" emptyPane
@@ -26,12 +25,12 @@ runWeb :: Web () -> IO ()
 runWeb wa = void $ do
   pane <- readIORef globalPane
   config <- readIORef globalConfig
-  log <- readIORef globalLog
+  l <- readIORef globalLog
 
-  (pane', log') <- execRWST wa config pane
+  (pane', l') <- execRWST wa config pane
   
   writeIORef globalPane pane'
-  writeIORef globalLog (log <> log')
+  writeIORef globalLog (l <> l')
 
 updateWeb :: Web ()
 updateWeb = get >>= (liftIO . writeIORef globalPane)
