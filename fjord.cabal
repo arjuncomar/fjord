@@ -13,7 +13,7 @@ maintainer:          nrujac@gmail.com
 category:            Web
 build-type:          Simple
 -- extra-source-files:  
-cabal-version:       >=1.10
+cabal-version:       >=1.20
 
 executable fjord
   main-is:             Main.hs
@@ -37,9 +37,24 @@ executable fjord
                      , containers
                      , global-variables
                      , ListZipper
+                     , QuickCheck
   hs-source-dirs:      .
                      , Web
   default-language:    Haskell2010
+  default-extensions:  TemplateHaskell
+                     , QuasiQuotes
+                     , OverloadedStrings
+
+test-suite tests
+  type:                detailed-0.9
+  test-module:         Web.Fjord.Tests.Tests
+  other-modules:
+  build-depends:       base
+                     , QuickCheck
+                     , Cabal >=1.20.0.3 && <1.22
+                     , cabal-test-quickcheck
+  default-language:    Haskell2010
+  hs-source-dirs:      .
   default-extensions:  TemplateHaskell
                      , QuasiQuotes
                      , OverloadedStrings

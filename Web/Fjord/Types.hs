@@ -12,10 +12,12 @@ import Data.UUID
 import qualified Graphics.UI.Gtk as Gtk
 import Graphics.UI.Gtk.WebKit.WebView
 import System.Glib.Flags
-import Data.Text hiding (replace)
+import Data.Text hiding (replace, map)
 import Data.Typeable
 import qualified Data.Set as Set
 import Data.List.Zipper
+
+import Test.QuickCheck
 
 data Direction2D = U | D | L | R deriving (Enum, Eq, Ord, Read, Show, Bounded)
 data Direction1D = Prev | Next deriving (Enum, Eq, Ord, Read, Show, Bounded)
@@ -35,6 +37,22 @@ data Pane = Pane { _uuid       :: UUID
                  , _commandEntry :: Maybe Gtk.Entry } deriving (Typeable)
 makeLensesWith (lensRules & generateSignatures .~ False) ''Pane
 uuid :: Getter Pane UUID
+
+instance Arbitrary Pane where
+  arbitrary = do
+    uid <- choose (undefined, undefined)  -- range is ignored by randomR for uuids
+    urls <- arbitrary
+    let hist = fromList $ map pack urls
+    return Pane {
+      _uuid = uid
+    , _history = hist
+    , _window = undefined
+    , _windowPane = undefined
+    , _sboverlay = undefined
+    , _webView = undefined
+    , _statusbar = undefined
+    , _commandEntry = undefined
+    }
 
 currentUri :: Lens' Pane Text
 currentUri = history . lens cursor setCursor
