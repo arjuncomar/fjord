@@ -15,6 +15,7 @@ import System.Glib.Flags
 import Data.Text hiding (replace, map)
 import Data.Typeable
 import qualified Data.Set as Set
+import qualified Data.Map as Map
 import Data.List.Zipper
 
 import Test.QuickCheck
@@ -23,8 +24,9 @@ data Direction2D = U | D | L | R deriving (Enum, Eq, Ord, Read, Show, Bounded)
 data Direction1D = Prev | Next deriving (Enum, Eq, Ord, Read, Show, Bounded)
 type BinOp a = a -> a -> a 
 
-data Statusbar = Statusbar { _gtkbar :: Gtk.Statusbar
-                           , _contextId :: Int }
+data Statusbar = Statusbar { _gtkbar    :: Gtk.Statusbar
+                           , _contextId :: Int 
+                           , _message   :: Text }
 makeLenses ''Statusbar
 
 data Pane = Pane { _uuid       :: UUID
@@ -34,7 +36,7 @@ data Pane = Pane { _uuid       :: UUID
                  , _webView    :: WebView
                  , _statusbar  :: Statusbar 
                  , _sboverlay  :: Gtk.Overlay 
-                 , _commandEntry :: Maybe Gtk.Entry } deriving (Typeable)
+                 , _gtkentry   :: Gtk.Entry} deriving (Typeable)
 makeLensesWith (lensRules & generateSignatures .~ False) ''Pane
 uuid :: Getter Pane UUID
 
@@ -51,7 +53,7 @@ instance Arbitrary Pane where
     , _sboverlay = undefined
     , _webView = undefined
     , _statusbar = undefined
-    , _commandEntry = undefined
+    , _gtkentry = undefined
     }
 
 currentUri :: Lens' Pane Text
@@ -64,7 +66,7 @@ setCursor z u | emptyp z = replace u z
 type Config = ()
 type Log = ()
 type Web = RWST Config Log Pane IO
-type KeyBind = ((Set.Set Modifier, Maybe Char), Web ())
+type KeyBind = ((Set.Set Modifier, Maybe Char), Pane -> IO ())
 
 key :: Lens' KeyBind (Maybe Char)
 key = _1._2
@@ -72,7 +74,7 @@ key = _1._2
 mods :: Lens' KeyBind (Set.Set Modifier)
 mods = _1._1
 
-action :: Lens' KeyBind (Web ())
+action :: Lens' KeyBind (Pane -> IO ())
 action = _2
 
 -- pane that should never be forced
@@ -86,3 +88,14 @@ makeWrapped ''Modifier
 
 instance Ord Modifier where
   a <= b = fromEnum a <= fromEnum b
+
+data FjordInput = Uri Text | Action (Pane -> IO ())
+data FjordOutput = Display Pane | RunAction (IO ())
+
+makePrisms ''FjordOutput
+makePrisms ''FjordInput
+
+data FjordConfig = FjordConfig {
+                     _keybinds :: Map.Map (Set.Set Modifier, Maybe Char) (Pane -> IO ()) 
+                   }
+makeLenses ''FjordConfig
