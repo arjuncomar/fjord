@@ -1,12 +1,10 @@
-import qualified Graphics.UI.Gtk as Gtk
-import Control.Monad.IO.Class
-import Web.Fjord.KeyBinds
-import Web.Fjord.Pane
+module Main where
+
+import Web.Fjord
 import Web.Fjord.Types
-import Web.Fjord.Web
-import qualified Data.Map as Map
-import Control.Monad.RWS
+import Web.Fjord.KeyBinds
 import Web.Fjord.Modifier
+import qualified Data.Map as Map
 
 defaultConfig = FjordConfig {
   _keybinds = Map.fromList [ createKeyBind [] (Just 'k') scrollUp 
