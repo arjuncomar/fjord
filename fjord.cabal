@@ -21,7 +21,6 @@ executable fjord
                      , Web.Fjord.Types
                      , Web.Fjord.KeyBinds
                      , Web.Fjord.History
-                     , Web.Fjord.Web
                      , Web.Fjord.Modifier
                      , Web.Fjord.Utils
   -- other-extensions:    
@@ -36,7 +35,6 @@ executable fjord
                      , lens
                      , uuid
                      , containers
-                     , global-variables
                      , ListZipper
                      , QuickCheck
                      , mvc

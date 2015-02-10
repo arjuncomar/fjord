@@ -5,7 +5,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Web.Fjord.Types where
 
-import Control.Monad.RWS
 import Control.Lens
 
 import Data.UUID
@@ -63,9 +62,6 @@ setCursor :: Zipper Text -> Text -> Zipper Text
 setCursor z u | emptyp z = replace u z 
               | otherwise = insert u z
 
-type Config = ()
-type Log = ()
-type Web = RWST Config Log Pane IO
 type KeyBind = ((Set.Set Modifier, Maybe Char), Pane -> IO ())
 
 key :: Lens' KeyBind (Maybe Char)
@@ -76,12 +72,6 @@ mods = _1._1
 
 action :: Lens' KeyBind (Pane -> IO ())
 action = _2
-
--- pane that should never be forced
--- used so we can have a pane before initGUI is called.
--- This is necessary to use runRWST.
-emptyPane :: Pane
-emptyPane = undefined
 
 newtype Modifier = Modifier { getModifier :: Gtk.Modifier } deriving (Bounded, Enum, Eq, Show, Flags)
 makeWrapped ''Modifier
