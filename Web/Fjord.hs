@@ -48,7 +48,7 @@ displayUri :: Managed (View FjordOutput)
 displayUri = liftIO . return . handles _Display $ asSink loadUri
 
 runAction :: Managed (View FjordOutput)
-runAction = liftIO . return . handles _RunAction $ asSink id
+runAction = liftIO . return . handles _RunAction $ asSink postGUISync
 
 viewFjord :: Managed (View FjordOutput)
 viewFjord = vstatusbar <> displayUri <> runAction
@@ -71,6 +71,5 @@ fjord config = do
   a    <- async $ runMVC pane modelFjord $ do
     (controller, viewer) <- fjordBrowser pane config
     (,) <$> viewer <*> controller
-  widgetShowAll (pane^.window)
   mainGUI
   void $ wait a

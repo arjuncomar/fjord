@@ -55,9 +55,11 @@ mkPane = do
   _ <- w  `Gtk.on` Gtk.deleteEvent $ liftIO Gtk.mainQuit >> return False 
 
   Gtk.widgetShowAll w
+  let defuri = "https://www.reddit.com"
+  void . postGUIAsync $ webViewLoadUri wv defuri
 
   return Pane { _uuid         = uid
-              , _history      = fromList ["https://www.reddit.com"]
+              , _history      = fromList [defuri]
               , _window       = w
               , _windowPane   = swView
               , _webView      = wv
@@ -84,17 +86,17 @@ createStatusbar = do
 
 
 updateStatusbar :: Statusbar -> IO ()
-updateStatusbar sb = void $ do
+updateStatusbar sb = postGUISync . void $ do
   Gtk.statusbarRemoveAll (sb^.gtkbar) (sb^.contextId)
   Gtk.statusbarPush (sb^.gtkbar) (fromIntegral $ sb^.contextId) (sb^.message)
 
 loadUri :: Pane -> IO ()
-loadUri pane = webViewLoadUri (pane^.webView) (pane^.currentUri)
+loadUri pane = postGUISync $ webViewLoadUri (pane^.webView) (pane^.currentUri)
 
 attachWV :: WebView -> Updatable FjordInput
 attachWV wv = fmap Uri $ MVC.on (lastDef "") $ managed $ \k -> do
   (output, input) <- spawn unbounded
-  _ <- Gtk.on wv navigationPolicyDecisionRequested $ \_ _ wbna _ -> do
+  void . Gtk.on wv navigationPolicyDecisionRequested $ \_ _ wbna _ -> do
     uri <- webNavigationActionGetOriginalUri wbna
     reason <- webNavigationActionGetReason wbna
     case reason of
@@ -106,9 +108,9 @@ attachWV wv = fmap Uri $ MVC.on (lastDef "") $ managed $ \k -> do
 entry :: Pane -> Updatable FjordInput
 entry pane = fmap Uri $ MVC.on (lastDef "") $ managed $ \k -> do
   (output, input) <- spawn unbounded
-  void . Gtk.on (pane^.gtkentry) entryActivated . liftIO . postGUISync $ do
+  void . Gtk.on (pane^.gtkentry) entryActivated . liftIO $ do
     uri <- entryGetText (pane^.gtkentry)
-    _   <- atomically (send output uri)
+    void $ atomically (send output uri)
     entrySetText (pane^.gtkentry) ("" :: Text)
     widgetHide (pane^.gtkentry)
     widgetGrabFocus (pane^.windowPane)
@@ -117,10 +119,10 @@ entry pane = fmap Uri $ MVC.on (lastDef "") $ managed $ \k -> do
 addKBs :: FjordConfig -> Pane -> Updatable FjordInput
 addKBs config pane = fmap Action $ MVC.on (lastDef (const emptyM)) $ managed $ \k -> do
   (output, input) <- spawn unbounded
-  _ <- Gtk.on (pane^.windowPane) keyPressEvent . tryEvent $ do
+  void . Gtk.on (pane^.windowPane) keyPressEvent . tryEvent $ do
     kv <- eventKeyVal
     ms <- eventModifier
-    _ <- liftIO . atomically . send output . fromMaybe (const emptyM) $ config^.keybinds.at (createKey ms kv) 
+    liftIO . void . atomically . send output . fromMaybe (const emptyM) $ config^.keybinds.at (createKey ms kv) 
     return ()
   k (asInput input)
     where createKey ms kv = (convert ms, toLower <$> keyToChar kv)

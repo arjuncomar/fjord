@@ -6,7 +6,7 @@ import Graphics.UI.Gtk (Attr, ScrolledWindow, Adjustment,
                         adjustmentGetValue, adjustmentGetStepIncrement,
                         adjustmentSetValue, adjustmentValueChanged,
                         scrolledWindowVAdjustment, scrolledWindowHAdjustment,
-                        postGUISync, widgetShowNow, widgetGrabFocus)
+                        postGUIAsync, widgetShowNow, widgetGrabFocus)
 import qualified Graphics.UI.Gtk as Gtk (get)
 
 import Control.Lens ((^.))
@@ -37,4 +37,4 @@ scrollLeft  = scroll L
 scrollRight = scroll R
 
 showEntry :: Pane -> IO ()
-showEntry pane = postGUISync $ widgetShowNow (pane^.gtkentry) >> widgetGrabFocus (pane^.gtkentry)
+showEntry pane = postGUIAsync $ widgetShowNow (pane^.gtkentry) >> widgetGrabFocus (pane^.gtkentry)
